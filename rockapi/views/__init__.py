@@ -1,1 +1,4 @@
+"""Views for the rockapi app."""
+
 from .auth import login_user, register_user
+from .type_view import TypeView
