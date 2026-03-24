@@ -5,4 +5,5 @@
         "--django-settings-module=bangazon.settings",
         "--max-line-length=120"
     ],
+    "python-envs.defaultEnvManager": "ms-python.python:pipenv"
 }

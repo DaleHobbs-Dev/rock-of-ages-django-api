@@ -24,7 +24,7 @@ class TypeView(ViewSet):
     def retrieve(self, request, pk=None):
         """Handle GET requests for single type
 
-        Returns:
+        Returns:y
             Response -- JSON serialized type record
         """
 
