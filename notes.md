@@ -79,3 +79,58 @@ export const getTypes = () => {
   }).then((res) => res.json());
 };
 ```
+
+## Fixtures for Rock of Ages
+
+A fixture in Django is a way to provide initial data for the database without having to write any `INSERT` SQL statements. For the Rock of Ages project, we can create fixtures for the Type and Rock models to populate the database with some initial data. We can create a `fixtures` directory in the `rockapi` app and add JSON files for each model. For example, we can create a `types.json` file with the following content:
+
+```json
+[
+  {
+    "model": "rockapi.type",
+    "pk": 1,
+    "fields": {
+      "label": "Granite"
+    }
+  },
+  {
+    "model": "rockapi.type",
+    "pk": 2,
+    "fields": {
+      "label": "Limestone"
+    }
+  }
+]
+```
+
+Then we run the following command to load the fixtures into the database:
+
+```bash
+python manage.py loaddata types.json
+```
+
+## Django Rest Framework (DRF) vs json-server Foreign Key Expansion
+
+It is important to note that the way Django REST Framework (DRF) handles foreign key expansion is different from how we did it in the client side course when handling the API with json-server. Here's a comparison:
+
+json-server method:
+
+```json
+{
+  "user_id": 1,
+  "user": { "username": "..." },
+  "type_id": 3,
+  "type": { "label": "..." }
+}
+```
+
+json-server keeps both the raw ID field and adds the expanded object under a new key.
+
+Django REST Framework
+
+```json
+{ "user": 1, "type": 3 }         // not expanded
+{ "user": { "username": "..." }, "type": 3 }  // _expand=user
+```
+
+DRF replaces the value in place — same key, just changes from an integer to an object when expanded. So you only ever have user and type as keys (for this project). The value is either an ID or a full object depending on whether _expand was passed.
