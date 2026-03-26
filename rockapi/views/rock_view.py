@@ -4,19 +4,19 @@
 # error occurs (i.e. something broke in our code, not a bad request from the client)
 from django.http import HttpResponseServerError
 
+# Import User model to expand the user foreign key on Rock
+from django.contrib.auth.models import User
+
 # serializers  - converts complex data types (like Django model instances) to/from
 #                JSON so data can be sent over the API
 # status       - contains HTTP status code constants like status.HTTP_200_OK (200),
 #                status.HTTP_404_NOT_FOUND (404), etc. so we don't have to hardcode numbers
 # Response     - DRF's response class that automatically handles converting data to JSON
 # ViewSet      - base class that groups related HTTP method handlers (list, create,
-#                retrieve, update, destroy) into a single class
+#                retrieve, update, destroy) into a single class-based view
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-
-# Import User model to expand the user foreign key on Rock
-from django.contrib.auth.models import User
 
 # The Rock model represents the rockapi_rock table in the database.
 # Importing it here gives us access to Rock.objects which is Django's ORM (Object
@@ -29,14 +29,26 @@ class RockView(ViewSet):
     """Rock view set"""
 
     def create(self, request):
-        """Handle POST operations
+        """Handle POST requests for rocks
 
         Returns:
-            Response -- JSON serialized instance
+            Response: JSON serialized representation of newly created rock
         """
 
-        # You will implement this feature in a future chapter
-        return Response("", status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        # Get an object instance of a rock type
+        chosen_type = Type.objects.get(pk=request.data["type"])
+
+        # Create a rock object and assign it property values
+        rock = Rock()
+        rock.user = request.auth.user
+        rock.weight = request.data["weight"]
+        rock.name = request.data["name"]
+        rock.type = chosen_type
+        rock.save()
+
+        serialized = RockSerializer(rock, many=False)
+
+        return Response(serialized.data, status=status.HTTP_201_CREATED)
 
     def list(self, request):
         """Handle GET requests for all items
