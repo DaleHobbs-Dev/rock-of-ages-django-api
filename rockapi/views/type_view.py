@@ -17,20 +17,34 @@ class TypeView(ViewSet):
             Response -- JSON serialized list of types
         """
 
-        types = Type.objects.all()
-        serialized = TypeSerializer(types, many=True)
-        return Response(serialized.data, status=status.HTTP_200_OK)
+        try:
+            # Type.objects.all() uses Django's ORM to run SELECT * FROM rockapi_type
+            types = Type.objects.all()
+            # Serialize the list of types and return the JSON
+            serialized = TypeSerializer(types, many=True)
+            return Response(serialized.data, status=status.HTTP_200_OK)
+        except Exception as ex:
+            return Response(
+                {"message": ex.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def retrieve(self, request, pk=None):
         """Handle GET requests for single type
 
-        Returns:y
+        Returns:
+            Status 200 OK if type found, 404 Not Found if not found, 500 Server Error if anything else goes wrong
             Response -- JSON serialized type record
         """
-
-        rock_type = Type.objects.get(pk=pk)
-        serialized = TypeSerializer(rock_type)
-        return Response(serialized.data, status=status.HTTP_200_OK)
+        try:
+            rock_type = Type.objects.get(pk=pk)
+            serialized = TypeSerializer(rock_type)
+            return Response(serialized.data, status=status.HTTP_200_OK)
+        except Type.DoesNotExist as ex:
+            return Response({"message": ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as ex:
+            return Response(
+                {"message": ex.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class TypeSerializer(serializers.ModelSerializer):

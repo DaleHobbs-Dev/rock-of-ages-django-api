@@ -60,7 +60,7 @@ class RockView(ViewSet):
             # Rock.objects.all() uses Django's ORM to run SELECT * FROM rockapi_rock
             # and return all rows as a Python list of Rock model instances
             if request.query_params.get("mine") == "true":
-                rocks = Rock.objects.filter(user=request.user)
+                rocks = Rock.objects.filter(user=request.auth.user)
             else:
                 rocks = Rock.objects.all()
 
@@ -76,6 +76,41 @@ class RockView(ViewSet):
         except Exception as ex:
             # If anything unexpected goes wrong, return a 500 error with the exception message
             return HttpResponseServerError(ex)
+
+    def destroy(self, request, pk=None):
+        """Handle DELETE requests for a single rock
+
+        Returns:
+            Response -- 204, 403, 404, or 500 status codes
+            204 if the rock was successfully deleted
+            403 if the rock's owner is not the authenticated user
+            404 if the rock doesn't exist
+            500 if any other unexpected error occurs
+        """
+
+        try:
+            rock = Rock.objects.get(pk=pk)
+
+            # If rock's owner is the authenticated user, delete the rock and return 204 no content
+            if rock.user.pk == request.auth.user.pk:
+                rock.delete()
+                return Response(None, status=status.HTTP_204_NO_CONTENT)
+            # If the rock's owner is not the authenticated user, return a 403 forbidden with a message
+            else:
+                return Response(
+                    {"message": "You do not have permission to delete this rock."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        # If the rock doesn't exist, return a 404 not found with a message
+        except Rock.DoesNotExist as ex:
+            return Response({"message": ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
+
+        # If anything else goes wrong, return a 500 error with the exception message
+        except Exception as ex:
+            return Response(
+                {"message": ex.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class RockTypeSerializer(serializers.ModelSerializer):
